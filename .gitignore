@@ -15,7 +15,7 @@ __pycache__/
 app/test_files/
 
 # Reports
-*.txt
+code_review_report.txt
 *.log
 
 # Mac files
