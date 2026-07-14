@@ -1,0 +1,22 @@
+# Virtual Environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Streamlit cache
+.streamlit/
+
+# Test generated files
+app/test_files/
+
+# Reports
+*.txt
+*.log
+
+# Mac files
+.DS_Store
