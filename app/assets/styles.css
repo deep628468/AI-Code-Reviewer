@@ -1,0 +1,923 @@
+/* ==========================================================
+   GLOBAL SETTINGS
+========================================================== */
+
+:root {
+
+    --bg: #0B0F17;
+    --card: #101827;
+    --card2: #132247;
+
+    --primary: #2563EB;
+    --secondary: #7C3AED;
+
+    --text: #FFFFFF;
+    --text2: #D5E3FF;
+    --text3: #93A8CF;
+
+    --border: rgba(255, 255, 255, .08);
+
+    --radius: 22px;
+
+}
+
+html,
+body,
+[data-testid="stAppViewContainer"] {
+
+    background: var(--bg);
+
+}
+
+.main .block-container {
+
+    max-width: 1600px;
+
+    padding-top: 35px;
+
+    padding-left: 55px;
+
+    padding-right: 55px;
+
+    padding-bottom: 45px;
+
+}
+
+/* ==========================================================
+   HERO
+========================================================== */
+
+.hero-container {
+
+    width: 100%;
+
+    min-height: 430px;
+
+    background: linear-gradient(135deg,
+            #1E40AF,
+            #4338CA,
+            #6D28D9);
+
+    border-radius: 28px;
+
+    padding: 70px 80px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    position: relative;
+
+    overflow: hidden;
+
+    margin-bottom: 35px;
+
+}
+
+
+.hero-badge {
+
+    background: rgba(255, 255, 255, .12);
+
+    color: white;
+
+    padding: 10px 22px;
+
+    border-radius: 999px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    margin-bottom: 35px;
+
+}
+
+.hero-logo {
+
+    width: 90px;
+
+    height: 90px;
+
+    background: rgba(255, 255, 255, .15);
+
+    margin: 0 auto 28px auto;
+
+    border-radius: 24px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 50px;
+
+    margin-bottom: 28px;
+
+}
+
+.hero-title {
+
+    font-size: 100px;
+
+    font-weight: 800;
+
+    color: white;
+
+    margin-bottom: 15px;
+
+}
+
+.hero-subtitle {
+
+    font-size: 26px;
+
+    color: #E4E7FF;
+
+    margin-bottom: 30px;
+
+}
+
+
+.hero-description {
+
+    max-width: 900px;
+
+    color: #E4E7FF;
+
+    font-size: 18px;
+
+    line-height: 1.8;
+
+    margin-bottom: 35px;
+
+}
+
+
+.hero-badges {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    gap: 15px;
+
+}
+
+
+.hero-badges span {
+
+    background: rgba(255, 255, 255, .12);
+
+    color: white;
+
+    padding: 12px 22px;
+
+    border-radius: 999px;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+}
+
+/* ==========================================================
+SIDEBAR
+========================================================== */
+
+section[data-testid="stSidebar"] {
+
+    width: 320px !important;
+
+}
+
+section[data-testid="stSidebar"]>div {
+
+    height: 100vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    padding: 18px;
+
+}
+
+.sidebar-footer {
+
+    margin-top: auto;
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    background: #1A2440;
+
+}
+
+/* ==========================================================
+   HEADINGS
+========================================================== */
+
+h2 {
+
+    color: white;
+
+    font-size: 34px !important;
+
+    font-weight: 800 !important;
+
+    margin-top: 18px;
+
+}
+
+h3 {
+
+    color: white;
+
+    font-size: 28px !important;
+
+    font-weight: 700 !important;
+
+}
+
+.section-title {
+
+    color: white;
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+    margin-bottom: 22px;
+
+}
+
+/* ==========================================================
+   INPUT SECTION
+========================================================== */
+
+.input-section {
+
+    margin-top: 45px;
+
+    margin-bottom: 45px;
+
+}
+
+/* ==========================================================
+   UPLOAD & EDITOR CARDS
+========================================================== */
+
+.upload-card,
+.editor-card {
+
+    background: #101827;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    border-radius: 22px;
+
+    padding: 28px;
+
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .25);
+
+    height: 100%;
+
+}
+
+/* ==========================================================
+   FILE UPLOADER
+========================================================== */
+
+[data-testid="stFileUploader"] {
+
+    background: #111D3B;
+
+    border: 2px dashed #3B82F6;
+
+    border-radius: 18px;
+
+    padding: 32px;
+
+    transition: all .25s ease;
+
+}
+
+[data-testid="stFileUploader"]:hover {
+
+    border-color: #8B5CF6;
+
+    background: #16254A;
+
+}
+
+[data-testid="stFileUploader"] label {
+
+    color: white;
+
+    font-size: 19px;
+
+    font-weight: 600;
+
+}
+
+/* ==========================================================
+   CODE EDITOR
+========================================================== */
+
+.stTextArea textarea {
+
+    background: #0C1632 !important;
+
+    color: #F8FAFC !important;
+
+    border: 1px solid rgba(255, 255, 255, .08) !important;
+
+    border-radius: 18px !important;
+
+    padding: 22px !important;
+
+    font-size: 17px !important;
+
+    line-height: 1.8 !important;
+
+    min-height: 450px !important;
+
+}
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
+.stButton>button {
+
+    width: 100%;
+
+    height: 60px;
+
+    border: none;
+
+    border-radius: 16px;
+
+    background: linear-gradient(90deg,
+            #2563EB,
+            #7C3AED);
+
+    color: white;
+
+    font-size: 19px;
+
+    font-weight: 700;
+
+    transition: all .25s ease;
+
+}
+
+.stButton>button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 12px 28px rgba(37, 99, 235, .35);
+
+}
+
+/* ==========================================================
+   DOWNLOAD BUTTON
+========================================================== */
+
+.stDownloadButton button {
+
+    width: 100%;
+
+    height: 56px;
+
+    border: none;
+
+    border-radius: 16px;
+
+    background: #163B8A;
+
+    color: white;
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+}
+
+.stDownloadButton button:hover {
+
+    background: #2454C8;
+
+}
+
+/* ==========================================================
+   METRICS
+========================================================== */
+
+[data-testid="metric-container"] {
+
+    background: #132247;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .20);
+
+}
+
+[data-testid="stMetricLabel"] {
+
+    font-size: 18px !important;
+
+    color: #C8DAFF !important;
+
+}
+
+[data-testid="stMetricValue"] {
+
+    font-size: 34px !important;
+
+    font-weight: 800 !important;
+
+    color: white !important;
+
+}
+
+/* ==========================================================
+   TABS
+========================================================== */
+
+.stTabs [data-baseweb="tab-list"] {
+
+    gap: 14px;
+
+    margin-top: 28px;
+
+    margin-bottom: 28px;
+
+    border-bottom: none;
+
+}
+
+.stTabs [data-baseweb="tab"] {
+
+    min-height: 58px;
+
+    padding: 14px 24px;
+
+    background: #132247;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    border-radius: 14px;
+
+    color: #D8E6FF !important;
+
+    font-size: 18px !important;
+
+    font-weight: 700 !important;
+
+    transition: all .25s ease;
+
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+
+    background: #19315F;
+
+}
+
+.stTabs [aria-selected="true"] {
+
+    background: linear-gradient(90deg,
+            #2563EB,
+            #7C3AED) !important;
+
+    color: white !important;
+
+}
+
+/* ==========================================================
+   CODE BLOCKS
+========================================================== */
+
+.stCodeBlock {
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+}
+
+pre {
+
+    background: #0C1632 !important;
+
+    color: #F8FAFC !important;
+
+    font-size: 16px !important;
+
+    line-height: 1.8 !important;
+
+    padding: 20px;
+
+}
+
+/* ==========================================================
+   ALERTS
+========================================================== */
+
+.stSuccess,
+.stWarning,
+.stError,
+.stInfo {
+
+    border-radius: 16px !important;
+
+    padding: 18px !important;
+
+    font-size: 17px;
+
+    border: none !important;
+
+}
+
+/* ==========================================================
+   EXPANDERS
+========================================================== */
+
+.streamlit-expanderHeader {
+
+    background: #132247;
+
+    color: white;
+
+    border-radius: 14px;
+
+    padding: 14px;
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+}
+
+.streamlit-expanderContent {
+
+    background: #0F1B39;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    border-top: none;
+
+    border-radius: 0 0 14px 14px;
+
+    padding: 16px;
+
+}
+
+/* ==========================================================
+   PROGRESS BAR
+========================================================== */
+
+.stProgress>div>div {
+
+    background: linear-gradient(90deg,
+            #2563EB,
+            #7C3AED) !important;
+
+    border-radius: 20px;
+
+}
+
+/* ==========================================================
+   SPINNER
+========================================================== */
+
+.stSpinner {
+
+    color: white;
+
+    font-size: 18px;
+
+}
+
+/* ==========================================================
+   CAPTION
+========================================================== */
+
+.stCaption {
+
+    color: #BFD3FF !important;
+
+    font-size: 15px;
+
+}
+
+/* ==========================================================
+   TABLES
+========================================================== */
+
+table {
+
+    border-collapse: collapse;
+
+    width: 100%;
+
+    border-radius: 16px;
+
+    overflow: hidden;
+
+}
+
+thead {
+
+    background: #132247;
+
+}
+
+thead th {
+
+    color: white;
+
+    padding: 16px;
+
+    font-size: 17px;
+
+}
+
+tbody td {
+
+    background: #101827;
+
+    color: #E8F0FF;
+
+    padding: 16px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .06);
+
+}
+
+/* ==========================================================
+   SCROLLBAR
+========================================================== */
+
+::-webkit-scrollbar {
+
+    width: 10px;
+
+    height: 10px;
+
+}
+
+::-webkit-scrollbar-track {
+
+    background: #0D152A;
+
+}
+
+::-webkit-scrollbar-thumb {
+
+    background: #315EF7;
+
+    border-radius: 20px;
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+    background: #5B7FFF;
+
+}
+
+/* ==========================================================
+   HORIZONTAL RULE
+========================================================== */
+
+hr {
+
+    border: none;
+
+    border-top: 1px solid rgba(255, 255, 255, .08);
+
+    margin: 28px 0;
+
+}
+
+/* ==========================================================
+   LINKS
+========================================================== */
+
+a {
+
+    color: #79A8FF;
+
+    text-decoration: none;
+
+}
+
+a:hover {
+
+    color: white;
+
+}
+
+/* ==========================================================
+   MARKDOWN TEXT
+========================================================== */
+
+p {
+
+    color: #E8F0FF;
+
+    line-height: 1.8;
+
+}
+
+strong {
+
+    color: white;
+
+}
+
+/* ==========================================================
+   CODE INLINE
+========================================================== */
+
+code {
+
+    color: #A8C7FF;
+
+    background: #132247;
+
+    border-radius: 6px;
+
+    padding: 2px 6px;
+
+}
+
+/* ==========================================================
+   COLUMN SPACING
+========================================================== */
+
+div[data-testid="column"] {
+
+    padding-left: 10px;
+
+    padding-right: 10px;
+
+}
+
+/* ==========================================================
+   HOVER EFFECT FOR CARDS
+========================================================== */
+
+.upload-card:hover,
+.editor-card:hover {
+
+    transform: translateY(-4px);
+
+    transition: .25s ease;
+
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .30);
+
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media (max-width:1200px) {
+
+    .hero-title {
+
+        font-size: 58px !important;
+
+    }
+
+    .hero-description {
+
+        font-size: 19px;
+
+    }
+
+    .hero-subtitle {
+
+        font-size: 24px;
+
+    }
+
+    .section-title {
+
+        font-size: 26px;
+
+    }
+
+}
+
+@media (max-width:900px) {
+
+    .main .block-container {
+
+        padding-left: 25px;
+
+        padding-right: 25px;
+
+    }
+
+    .hero-container {
+
+        padding: 40px;
+
+    }
+
+    .hero-header {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+    .hero-title {
+
+        font-size: 46px !important;
+
+    }
+
+    .hero-description {
+
+        font-size: 18px;
+
+    }
+
+    .hero-badges span {
+
+        font-size: 15px;
+
+    }
+
+}
+
+/* ==========================================================
+   FINISHING TOUCHES
+========================================================== */
+
+* {
+
+    transition:
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease;
+
+}
+
+/* ==========================================
+   DASHBOARD CARDS
+========================================== */
+
+.dashboard-card {
+
+    background: #101827;
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    border-radius: 22px;
+
+    padding: 30px;
+
+    margin-top: 25px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, .20);
+
+}
+
+.dashboard-title {
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+    color: white;
+
+    margin-bottom: 22px;
+
+}

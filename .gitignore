@@ -20,3 +20,12 @@ code_review_report.txt
 
 # Mac files
 .DS_Store
+
+# IDE files
+.vscode/
+
+# macOS metadata
+__MACOSX/
+
+# Python cache
+*.pyo

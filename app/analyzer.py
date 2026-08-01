@@ -1,13 +1,12 @@
 import ast
 import subprocess
 
-from app.utils import remove_duplicates
-
+from utils import remove_duplicates
 
 def analyze_code(code):
 
     functions = []
-    loops = []
+    loops = [] 
     classes = []
     imports = []
     variables = []
@@ -52,18 +51,16 @@ def analyze_code(code):
         if isinstance(node, ast.ClassDef):
             classes.append(node.name)
 
-
         # Detect imports
         if isinstance(node, ast.Import):
 
             for name in node.names:
                 imports.append(name.name)
 
-
         if isinstance(node, ast.ImportFrom):
-
-            imports.append(node.module)
-
+            
+            if node.module:
+                imports.append(node.module)
 
         # Detect variables
         if isinstance(node, ast.Assign):
@@ -100,6 +97,11 @@ def run_flake8(file_path):
 
 
     for line in result.stdout.splitlines():
+        
+        parts = line.split(":", 3)
+
+        if len(parts) != 4:
+            continue
 
         file, line_no, column, message = line.split(":", 3)
 

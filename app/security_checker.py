@@ -75,8 +75,6 @@ def check_security(code):
 
         })
 
-
-
     # ----------------------------
     # Dangerous eval Detection
     # ----------------------------
@@ -100,8 +98,6 @@ def check_security(code):
             )
 
         })
-
-
 
     # ----------------------------
     # SQL Injection Detection

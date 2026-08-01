@@ -52,6 +52,23 @@ def calculate_score(issues):
 
     return score
 
+ERROR_EXPLANATIONS = {
+    "E111": "Indentation is not a multiple of 4 spaces.",
+    "E202": "Remove unnecessary whitespace before ')'.",
+    "E203": "Remove unnecessary whitespace before ':' or ','.",
+    "E211": "Remove unnecessary whitespace before '('.",
+    "E221": "Remove extra spaces before an operator.",
+    "E231": "Add a space after ',' or ':'.",
+    "E302": "Add two blank lines before a function or class definition.",
+    "E303": "Reduce the number of blank lines.",
+    "E305": "Add two blank lines after a function or class definition.",
+    "E501": "Line exceeds the recommended maximum length.",
+    "W291": "Remove trailing whitespace at the end of the line.",
+    "W292": "Add a newline at the end of the file.",
+    "W293": "Blank line contains unnecessary whitespace.",
+    "W391": "Remove the extra blank line at the end of the file."
+}
+
 
 
 def format_quality_report(flake8_report):
@@ -88,7 +105,13 @@ Issues:
 
         formatted += f"• {issue}\n"
 
+        for code, explanation in ERROR_EXPLANATIONS.items():
 
+            if code in issue:
+
+                formatted += f"   💡 {explanation}\n\n"
+
+                break
 
     return {
         "score": score,

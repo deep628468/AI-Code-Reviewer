@@ -1,91 +1,96 @@
 import ast
 
 
+# ==========================
+# Complexity Analyzer
+# ==========================
+
 def analyze_complexity(code):
 
     try:
+
         tree = ast.parse(code)
 
-    except SyntaxError:
+    except SyntaxError as e:
+
         return {
-            "time_complexity": "Not Available",
-            "space_complexity": "Not Available",
-            "explanation": "Cannot analyze complexity because code contains syntax errors."
+            "error": f"Syntax Error: {e}"
         }
 
 
-    loop_count = 0
-    nested_loop = False
+    loops = 0
+    nested_loops = 0
+    functions = 0
+    
+    space_complexity = "O(1)"
 
 
     for node in ast.walk(tree):
 
+        # Count functions
+        if isinstance(node, ast.FunctionDef):
+            functions += 1
+            
+            
+        # Detect additional memory usage
+
+        if isinstance(
+            node,
+            (
+                ast.List,
+                ast.Dict,
+                ast.Set,
+                ast.ListComp,
+                ast.DictComp,
+                ast.SetComp
+            )
+        ):
+            space_complexity = "O(n)"
+
+
+        # Count loops
         if isinstance(node, (ast.For, ast.While)):
 
-            loop_count += 1
+            loops += 1
 
 
+            # Check nested loops
             for child in ast.walk(node):
 
-                if child != node and isinstance(child, (ast.For, ast.While)):
-
-                    nested_loop = True
-
-
-
-    # Time Complexity Detection
-
-    if nested_loop:
-
-        time_complexity = "O(n²)"
-
-        reason = (
-            "Nested loop detected. "
-            "The outer loop runs n times and the inner loop "
-            "also runs n times, resulting in n × n operations."
-        )
+                if child != node and isinstance(
+                    child,
+                    (ast.For, ast.While)
+                ):
+                    nested_loops += 1
 
 
-    elif loop_count == 1:
 
-        time_complexity = "O(n)"
+    # Estimate complexity
 
-        reason = (
-            "Single loop detected. "
-            "The loop runs once for every element in the input."
-        )
+    if nested_loops >= 1:
 
+        complexity = "O(n²)"
+
+    elif loops > 0:
+
+        complexity = "O(n)"
 
     else:
 
-        time_complexity = "O(1)"
-
-        reason = (
-            "No loop detected. "
-            "The program performs a constant number of operations."
-        )
-
-
-
-    # Space Complexity Detection
-
-    space_complexity = "O(1)"
-
-    space_reason = (
-        "No additional data structure detected. "
-        "Only variables are used."
-    )
+        complexity = "O(1)"
 
 
 
     return {
 
-        "time_complexity": time_complexity,
+        "Functions": functions,
 
-        "space_complexity": space_complexity,
+        "Loops": loops,
 
-        "explanation": reason,
+        "Nested Loops": nested_loops,
 
-        "space_reason": space_reason
+        "Estimated Time Complexity": complexity,
+        
+        "Estimated Space Complexity": space_complexity
 
     }

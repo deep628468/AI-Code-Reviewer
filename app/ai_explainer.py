@@ -1,24 +1,33 @@
 import os
-
 from dotenv import load_dotenv
 from groq import Groq
+from groq import APIConnectionError, APIStatusError, RateLimitError
 
+MODEL_NAME = "llama-3.3-70b-versatile"
+
+# =====================================
+# Load Environment Variables
+# =====================================
 
 load_dotenv()
 
+API_KEY = os.getenv("GROQ_API_KEY")
 
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+if not API_KEY:
+    raise ValueError("GROQ_API_KEY not found in .env file")
 
+client = Groq(api_key=API_KEY)
 
+# =====================================
+# Explain Single Issue
+# =====================================
 
 def explain_issue(issue):
 
     prompt = f"""
 You are an expert Python code reviewer.
 
-Analyze this code issue:
+Analyze this issue.
 
 File:
 {issue['file']}
@@ -35,194 +44,215 @@ Severity:
 Issue:
 {issue['message']}
 
-
-Give a short answer in this format:
+Respond in this format only:
 
 Problem:
-(Explain what is wrong)
+...
 
 Reason:
-(Explain why it matters)
+...
 
 Solution:
-(Explain how to fix it)
+...
 
-Keep the answer under 100 words.
+Keep the response under 100 words.
 """
 
+    try:
 
-    response = client.chat.completions.create(
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert Python code reviewer."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.3,
+            timeout=30
+        )
 
-        model="llama-3.3-70b-versatile",
+        answer = response.choices[0].message.content.strip()
 
-        messages=[
+        return {
+            "explanation": answer,
+            "suggestion": answer
+        }
 
-            {
-                "role": "system",
-                "content": "You review Python code professionally."
-            },
+    except RateLimitError:
+        return {
+            "explanation": "⚠ Groq API rate limit exceeded.",
+            "suggestion": "Try again later."
+        }
 
-            {
-                "role": "user",
-                "content": prompt
-            }
+    except APIConnectionError as e:
+      
+        return {
+            "explanation": "⚠ Unable to connect to Groq.",
+            "suggestion": str(e)
+        }
 
-        ],
+    except APIStatusError as e:
+        return {
+            "explanation": f"⚠ API Error {e.status_code}",
+            "suggestion": str(e)
+        }
 
-        temperature=0.3
-    )
+    except Exception as e:
+    
+        return {
+            "explanation": f"⚠ {e}",
+            "suggestion": str(e)
+        }
+
+# =====================================
+# AI Code Review
+# =====================================
+
+def review_code(code):
+
+    prompt = f"""
+You are an expert Python code reviewer.
+
+Review the following Python code.
+
+Mention:
+
+1. Bugs
+2. Code quality
+3. Performance
+4. Best practices
+5. Suggestions
+
+Python Code:
+
+{code}
+"""
+    try:
+
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert Python reviewer."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.3,
+            timeout=60
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except RateLimitError:
+        return "⚠ Groq API rate limit exceeded."
+
+    except APIConnectionError as e:
+       
+        return f"⚠ Connection failed.\n\n{e}"
+
+    except APIStatusError as e:
+        return f"⚠ API Error {e.status_code}"
+
+    except Exception as e:
+       
+        return f"⚠ Unexpected Error:\n{e}"
 
 
-    answer = response.choices[0].message.content
-
-
-    return {
-
-        "explanation": answer,
-
-        "suggestion": answer
-
-    }
-
-
-
+# =====================================
+# AI Code Fix
+# =====================================
 
 def fix_code(code):
 
     prompt = f"""
 You are an expert Python developer.
 
-Review this Python code and fix:
+Correct the following Python code.
+
+Fix:
 
 - Syntax errors
+- Runtime errors
 - Logical errors
-- Code quality problems
-- Formatting issues
+- Formatting
+- PEP8 issues
 
-Return only the corrected Python code.
+Return ONLY valid Python code.
 
-Do not add explanations.
+Do NOT include:
 
-Code:
-
-{code}
-"""
-
-
-    response = client.chat.completions.create(
-
-        model="llama-3.3-70b-versatile",
-
-        messages=[
-
-            {
-                "role": "system",
-                "content": "You are a professional Python developer."
-            },
-
-            {
-                "role": "user",
-                "content": prompt
-            }
-
-        ],
-
-        temperature=0.2
-
-    )
-
-
-    return response.choices[0].message.content
-
-def review_code(code):
-
-    prompt = f"""
-You are a senior Python developer performing a professional code review.
-
-Review the following Python code carefully.
-
-Analyze:
-
-1. Code quality
-2. Readability
-3. Naming conventions
-4. Logic mistakes
-5. Performance issues
-6. Python best practices
-7. Possible bugs
-
-
-Return your response exactly in this format:
-
-
-## 📊 Code Quality Score
-
-Give a score out of 10.
-
-Example:
-8/10
-
-
-## ❌ Problems Found
-
-Mention important issues only.
-
-Format:
-
-1. Problem name
-   Explanation
-
-
-## 🔍 Reason
-
-Explain why these problems matter.
-
-
-## ✅ Solution
-
-Give practical fixes with examples if required.
-
-
-## 💡 Improvement Suggestions
-
-Give 2-3 suggestions to make this code more professional.
-
-
-Rules:
-
-- Keep the answer simple.
-- Avoid unnecessary theory.
-- Focus on actionable improvements.
-- Maximum 250 words.
-
+- Markdown
+- Triple backticks
+- ```python
+- Explanations
+- Notes
+- Headings
+Return ONLY corrected Python code.
 
 Python Code:
 
 {code}
 """
+    try:
+        
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert Python developer."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            temperature=0.2,
+            timeout=60
+        )
 
+        fixed = response.choices[0].message.content.strip()
 
-    response = client.chat.completions.create(
+        # return fixed
+    
+        #     fixed = response.choices[0].message.content.strip()
 
-        model="llama-3.3-70b-versatile",
+        # Remove Markdown code fences if present
+        if fixed.startswith("```python"):
+            fixed = fixed.replace("```python", "", 1)
 
-        messages=[
+        if fixed.startswith("```"):
+            fixed = fixed.replace("```", "", 1)
 
-            {
-                "role": "system",
-                "content": "You are an expert Python code reviewer."
-            },
+        if fixed.endswith("```"):
+            fixed = fixed[:-3]
 
-            {
-                "role": "user",
-                "content": prompt
-            }
+        return fixed.strip()
+    
+         
 
-        ],
+    except RateLimitError:
+        return "⚠ Groq API rate limit exceeded."
 
-        temperature=0.3
+    except APIConnectionError as e:
+      
+        return {
+            "explanation": f"⚠ {e}",
+            "suggestion": str(e)
+        }
 
-    )
+    except APIStatusError as e:
+        return f"⚠ API Error {e.status_code}"
 
-
-    return response.choices[0].message.content
+    except Exception as e:
+      
+        return f"⚠ Unexpected Error:\n{e}"

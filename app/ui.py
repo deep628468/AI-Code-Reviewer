@@ -1,566 +1,714 @@
-import sys
+from analyzer import analyze_code
+from complexity import analyze_complexity
+from quality_checker import check_quality
+from security_checker import check_security
+import tempfile
 import os
 
-sys.path.append(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__)
-        )
-    )
-)
-
+from ai_explainer import review_code, fix_code
 import streamlit as st
+from pathlib import Path
 
-from app.analyzer import analyze_code, run_flake8
-from app.complexity import analyze_complexity
-from app.quality_checker import check_quality
-from app.ai_explainer import explain_issue, fix_code, review_code
-from app.security_checker import check_security
-from app.report_generator import generate_report
+# =====================================
+# PAGE CONFIG
+# =====================================
 
-st.set_page_config(
-    page_title="AI Code Reviewer",
-    page_icon="🤖",
-    layout="wide"
-)
-
-# -------------------------
-# Session State
-# -------------------------
-
-if "current_code" not in st.session_state:
-    st.session_state.current_code = ""
+def configure_page():
+    st.set_page_config(
+        page_title="AI Code Reviewer",
+        page_icon="🤖",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    ) 
     
-if "report" not in st.session_state:
-    st.session_state.report = ""
+    session_defaults = {
+        "analysis": None,
+        "complexity": None,
+        "security": None,
+        "quality": None,
+        "review": None,
+        "fixed_code": None,
+        "analysis_done": False,
+    }
 
-if "analysis_done" not in st.session_state:
-    st.session_state.analysis_done = False
+    for key, value in session_defaults.items():
+        st.session_state.setdefault(key, value)
+        
+# =====================================
+# LOAD CSS
+# =====================================
 
-if "fixed_code" not in st.session_state:
-    st.session_state.fixed_code = ""
+def load_css():
+    css_file = Path(__file__).parent / "assets" / "styles.css"
 
-if "ai_review" not in st.session_state:
-    st.session_state.ai_review = ""
+    with open(css_file) as f:
+        st.markdown(
+            f"<style>{f.read()}</style>",
+            unsafe_allow_html=True,
+        )
+      
+def get_quality_report(code):
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".py",
+        mode="w",
+        encoding="utf-8"
+    ) as temp:
+        temp.write(code)
+        temp_path = temp.name
 
-# -------------------------
-# Title
-# -------------------------
+    try:
+        return check_quality(temp_path)
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
-st.title("🤖 AI Code Reviewer")
+# =====================================
+# SIDEBAR
+# =====================================
 
-st.write(
-    "Upload Python code or paste code to get AI-powered review, "
-    "complexity analysis, explanations and automatic fixes."
+with st.sidebar:
+
+    st.markdown("# 🤖 AI Code Reviewer")
+
+    st.markdown(
+        "<p style='color:#9FB6D9;'>Professional Python Analysis Platform</p>",
+        unsafe_allow_html=True
+    )
+
+    st.divider()
+    
+    st.markdown("""
+🏠 Dashboard
+
+🧠 AI Code Review
+
+⚡ Complexity Analysis
+
+🛡 Security Scan
+
+📊 Quality Report
+
+🛠 Automatic Code Fix
+
+📄 Report Generation
+""")
+
+    st.markdown(
+    """
+<div class="sidebar-footer">
+
+<p><strong>Version</strong> 1.0</p>
+
+<p>Built with Python + Streamlit</p>
+
+<p>Powered by Groq AI</p>
+
+</div>
+""",
+    unsafe_allow_html=True
 )
+        
+def render_hero():
+    st.markdown(
+        """
+<div class="hero-container">
 
-# -------------------------
-# Input
-# -------------------------
+<div class="hero-badge">
+🚀 Professional AI-Powered Code Analysis Platform
+</div>
 
-uploaded_file = st.file_uploader(
-    "📂 Upload Python File",
-    type=["py"]
-)
+<div class="hero-header">
 
-pasted_code = st.text_area(
-    "📝 Or paste your Python code here",
-    height=250
-)
+<div class="hero-logo">
+🔍
+</div>
 
-code = ""
+<div>
+<div class="hero-title">
+AI Code Reviewer
+</div>
 
-if uploaded_file:
+<div class="hero-subtitle">
+Professional Static Analysis & AI-Powered Code Review for Python
+</div>
+</div>
 
-    code = uploaded_file.read().decode("utf-8")
+</div>
 
-elif pasted_code.strip():
+<div class="hero-description">
+Analyze Python source code for syntax errors, complexity,
+security vulnerabilities, code quality, maintainability,
+and receive AI-powered review with automatic code improvement
+from one professional dashboard.
+</div>
 
-    code = pasted_code
+<div class="hero-badges">
+<span>🐍 Python</span>
+<span>🤖 Groq AI</span>
+<span>🌳 AST Analysis</span>
+<span>🛡 Security</span>
+<span>📈 Quality</span>
+<span>⚡ Complexity</span>
+</div>
 
-if code:
+</div>
+""",
+        unsafe_allow_html=True,
+    )      
+    
+# =====================================
+# FEATURE CARDS
+# =====================================
 
-    st.session_state.current_code = code
+def render_analysis_metrics(functions, classes, loops, lines, imports, variables, error):
 
-st.subheader("📝 Your Code")
+    c1, c2, c3, c4 = st.columns(4)
 
-if st.session_state.current_code:
+    with c1:
+        st.metric("Functions", len(functions))
+
+    with c2:
+        st.metric("Classes", len(classes))
+
+    with c3:
+        st.metric("Loops", len(loops))
+
+    with c4:
+        st.metric("Lines", lines)
+
+    c5, c6, c7 = st.columns(3)
+
+    with c5:
+        st.metric("Imports", len(imports))
+
+    with c6:
+        st.metric("Variables", len(variables))
+
+    with c7:
+        st.metric("Errors", 0 if error is None else 1)
+
+# =====================================
+# INPUT SECTION
+# =====================================
+
+def render_input_section():
+    
+    left, right = st.columns([1, 2], gap="large")
+
+    with left:
+
+        st.markdown(
+            '<div class="section-title">📂 Upload Python File</div>',
+            unsafe_allow_html=True
+        )
+
+        uploaded_file = st.file_uploader(
+            "Choose Python File",
+            type=["py"],
+            label_visibility="collapsed"
+        )
+
+    with right:
+
+        st.markdown(
+            '<div class="section-title">💻 Code Editor</div>',
+            unsafe_allow_html=True
+        )
+
+        code = st.text_area(
+            "Python Code",
+            height=430,
+            placeholder="Paste your Python code here...",
+            label_visibility="collapsed"
+        )
+    
+    return uploaded_file, code
+# =====================================
+# ANALYSIS SECTION
+# =====================================
+
+def render_analysis(uploaded_file, code):
+    
+    analyze = st.button(
+        "🚀 Analyze Code",
+        width="stretch"
+    )
+
+    # When Analyze is clicked
+    if analyze:
+        st.session_state.analysis_done = True
+
+    if not st.session_state.analysis_done:
+        return
+        
+    if uploaded_file:
+        code = uploaded_file.read().decode("utf-8")
+         
+    if analyze:
+
+        for key in (
+            "analysis",
+            "complexity",
+            "security",
+            "quality",
+            "review",
+            "fixed_code",
+        ):
+            st.session_state[key] = None
+
+    if not code.strip():
+        st.warning("Please upload or paste Python code.")
+        return   
+
+    if analyze:
+        
+        with st.spinner("🤖 AI is reviewing your code..."):
+
+            st.session_state.analysis = analyze_code(code)     
+
+    analysis = st.session_state.analysis
+    
+    if analysis is None:
+        return
+
+    functions, loops, classes, imports, variables, lines, error = analysis
+
+    st.success("Analysis Completed Successfully ✅")
+    
+    st.markdown("""
+    <div class="dashboard-card">
+    <div class="dashboard-title">
+    📄 Your Code
+    </div>
+    """, unsafe_allow_html=True)
 
     st.code(
-        st.session_state.current_code,
+        code,
         language="python"
     )
 
-# -------------------------
-# Main Review Button
-# -------------------------
-
-if st.button(
-    "🔍 Review Code"
-):
-
-    st.session_state.analysis_done = True
-    st.session_state.ai_review = ""
-    st.session_state.fixed_code = ""
-
-
-# -------------------------
-# Analysis
-# -------------------------
-
-if st.session_state.analysis_done:
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.write("")
+     
+    st.markdown("""
+    <div class="dashboard-card">
+    <div class="dashboard-title">
+    📊 Analysis Dashboard
+    </div>
+    """, unsafe_allow_html=True)
 
 
-    code = st.session_state.current_code
-
-
-    (
+    render_analysis_metrics(
         functions,
-        loops,
         classes,
+        loops,
+        lines,
         imports,
         variables,
-        lines,
-        syntax_error
-    ) = analyze_code(code)
+        error
+    )
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.write("")
 
+    st.markdown("## 📝 AI Summary")
 
-
-    if syntax_error:
-
-        st.error(
-            "❌ Syntax Error Found"
-        )
-
-        st.write(
-            syntax_error
-        )
-
-    else:
-
+    complexity = st.session_state.complexity
+    if complexity is None:
         complexity = analyze_complexity(code)
-
-        os.makedirs(
-            "app/test_files",
-            exist_ok=True
-        )
-
-        temp_file = (
-            "app/test_files/uploaded_code.py"
-        )
-
-        with open(
-            temp_file,
-            "w"
-        ) as file:
-
-            file.write(code)
-
-
-
-        quality = check_quality(
-            temp_file
-        )
-
-
-        issues = run_flake8(
-            temp_file
-        )
+        st.session_state.complexity = complexity
+    
+    
+    security_issues = st.session_state.security
+    if security_issues is None:
         security_issues = check_security(code)
+        st.session_state.security = security_issues
 
-        # -------------------------
-        # Tabs
-        # -------------------------
+    quality = st.session_state.quality
+    if quality is None:
+        quality = get_quality_report(code)
+        st.session_state.quality = quality
 
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
-            [
-                "📌 Code Analysis",
-                "⚡ Complexity",
-                "🔍 Quality Report",
-                "🛡️ Security Report",
-                "🤖 AI Review",
-                "🛠 Fix Code",
-                "📄 Report"
-            ]
-        )
+    summary = f"""
+    ✅ Functions detected: {len(functions)}
 
-        # -------------------------
-        # Code Analysis
-        # -------------------------
+    ✅ Loops detected: {len(loops)}
 
-        with tab1:
+    ✅ Time Complexity: {complexity.get("Estimated Time Complexity", "N/A")}
 
+    ✅ Space Complexity: {complexity.get("Estimated Space Complexity", "N/A")}
 
-            st.subheader(
-                "📌 Code Analysis"
-            )
+    ✅ Security: {"PASS" if not security_issues else "WARNING"}
 
+    ✅ Quality Score: {quality["score"]}/100
+    """
 
-            col1, col2 = st.columns(2)
+    st.markdown(summary)
+    
+    tabs = st.tabs([
+        "📊 Overview",
+        "⚡ Complexity",
+        "🛡 Security",
+        "📈 Quality",
+        "🤖 AI Review",
+        "🛠 Code Fix",
+        "📄 Report"
+    ])
+    
+    with tabs[0]:
+         
+        st.write("### 🔹 Functions")
 
-
-            with col1:
-
-                st.metric(
-                    "Functions",
-                    len(functions)
-                )
-
-                st.metric(
-                    "Classes",
-                    len(classes)
-                )
-
-                st.metric(
-                    "Lines",
-                    lines
-                )
+        if functions:
+            st.code("\n".join(functions), language="text")
+        else:
+            st.info("No functions found.")
 
 
-            with col2:
+        st.write("### 🔹 Classes")
 
-                st.metric(
-                    "Loops",
-                    len(loops)
-                )
+        if classes:
+            st.code("\n".join(classes), language="text")
+        else:
+            st.info("No classes found.")
+                 
+        st.write("### 🔹 Imports")
 
-                st.metric(
-                    "Imports",
-                    len(imports)
-                )
+        if imports:
+            st.code("\n".join(imports), language="text")
+        else:
+            st.info("No imports found.")
 
-                st.metric(
-                    "Variables",
-                    len(variables)
-                )
-                
-        # -------------------------
-        # Complexity
-        # -------------------------
+        st.write("### 🔹 Variables")
 
-        with tab2:
+        if variables:
+            st.code("\n".join(variables), language="text")
+        else:
+            st.info("No variables found.")
+              
+    with tabs[1]:
+        
+        if st.session_state.complexity is None:
+            st.session_state.complexity = analyze_complexity(code)
+            
+        complexity = st.session_state.complexity
+        
+        
+        if complexity is None:
 
+            st.warning("Please analyze the code first.")
+        
+        else:
 
-            st.subheader(
-                "⚡ Complexity Analysis"
-            )
+            st.markdown("## ⚡ Complexity Analysis")
 
+            if "error" in complexity:
 
-            st.write(
-                "### Time Complexity"
-            )
-
-            st.success(
-                complexity["time_complexity"]
-            )
-
-
-            st.write(
-                complexity["explanation"]
-            )
-
-
-            st.write(
-                "### Space Complexity"
-            )
-
-
-            st.success(
-                complexity["space_complexity"]
-            )
-
-
-            st.write(
-                complexity["space_reason"]
-            )
-
-        # -------------------------
-        # Quality Report
-        # -------------------------
-
-        with tab3:
-
-
-            st.subheader(
-                "🔍 Code Quality Report"
-            )
-
-            if issues:
-
-
-                st.warning(
-                    "Issues Found"
-                )
-
-
-                for issue in issues:
-
-                    st.error(
-                        f"{issue['severity']} : {issue['message']}"
-                    )
+                st.error(complexity["error"])
 
             else:
 
-                st.success(
-                    "✅ No quality issues found"
-                )
+                col1, col2 = st.columns(2)
 
+                with col1:
 
-           # -------------------------
-                # Security Report
-            # -------------------------
-
-        with tab4:
-
-           st.subheader(
-            "🛡 Security Report"
-           )
-
-
-        if security_issues:
-
-
-           for issue in security_issues:
-
-
-                if issue["severity"] == "Critical":
-
-                    st.error(
-                      f"🚨 {issue['severity']}: {issue['problem']}"
+                    st.metric(
+                        "Functions",
+                        complexity["Functions"]
                     )
 
-                else:
-
-                    st.warning(
-                       f"⚠️ {issue['severity']}: {issue['problem']}"
+                    st.metric(
+                        "Loops",
+                        complexity["Loops"]
                     )
 
-                st.write(
-                   "Reason:"
-                )
+                    st.metric(
+                        "Nested Loops",
+                        complexity["Nested Loops"]
+                    )
 
-                st.write(
-                   issue["reason"]
-                )
+                with col2:
 
+                    st.metric(
+                        "Time Complexity",
+                        complexity["Estimated Time Complexity"]
+                    )
 
-                st.write(
-                   "Solution:"
-                )
+                    st.metric(
+                        "Space Complexity",
+                        complexity["Estimated Space Complexity"]
+                    )
+        
+    with tabs[2]:
+        
+        if st.session_state.security is None:
+            st.session_state.security = check_security(code)
 
-                st.write(
-                    issue["solution"]
-                )
+        security_issues = st.session_state.security
+        
+        st.markdown("## 🛡 Security Scan")
+
+        if not security_issues:
+
+            left, right = st.columns(2)
+
+            with left:
+                st.success("✅ No security issues detected")
+
+            with right:
+                st.metric("Risk Score", "LOW")
+                st.metric("Issues Found", 0)
+                st.metric("Security Status", "PASS")
+                
+                st.progress(1.0)
+
+                st.caption("100% Secure")
 
         else:
 
-           st.success(
-                "✅ No security issues detected."
-            )
-           
-        # -------------------------
-        # AI Review
-        # -------------------------
+            left, right = st.columns(2)
 
-        with tab5:
+            with left:
+                st.metric("Issues Found", len(security_issues))
 
-            st.subheader(
-                "🤖 AI Code Review"
-            )
+            with right:
+                
+                st.metric("Security Status", "WARNING")
+                
+                security_score = max(0, 1 - (len(security_issues) * 0.2))
 
+                st.progress(security_score)
 
-            if st.button(
-                "Generate AI Review",
-                key="ai_button"
-            ):
+                st.caption(f"{int(security_score * 100)}% Security Score")
 
+            st.error("Security issues were found in the code.")
 
-                with st.spinner(
-                    "AI reviewing code..."
+            for issue in security_issues:
+
+                with st.expander(
+                    f"{issue['severity']} : {issue['problem']}"
                 ):
 
+                    st.write(f"**Reason:** {issue['reason']}")
 
-                    try:
+                    st.write(f"**Solution:** {issue['solution']}")            
+             
+    with tabs[3]:
 
-                        st.session_state.ai_review = review_code(
-                            code
-                        )
+        quality = st.session_state.quality
 
+        if quality is None:
+            quality = get_quality_report(code)
+            st.session_state.quality = quality
 
-                    except Exception as e:
+        st.markdown("## 📈 Code Quality Report")
 
-                        st.session_state.ai_review = (
-                            f"Error: {e}"
-                        )
+        left, right = st.columns(2)
 
-            # if st.session_state.ai_review:
+        with left:
 
-            #     st.markdown(
-            #         st.session_state.ai_review
-            #     )
-
-            if st.session_state.ai_review:
-
-                review_text = st.session_state.ai_review
-
-                 # Extract Quality Score
-
-                score = None
-
-                if "Code Quality Score" in review_text:
-
-                    try:
-
-                        score_part = review_text.split(
-                            "Code Quality Score"
-                        )[1]
-
-
-                        score = score_part.split(
-                            "/10"
-                        )[0].strip()
-
-                    except:
-
-                       score = None
-
-                if score:
-
-                   st.metric(
-                      "📊 Code Quality Score",
-                      f"{score}/10"
-                    )
-
-                # Remove score section before displaying AI text
-
-                clean_review = review_text
-
-
-                if "📊 Code Quality Score" in clean_review:
-
-                    parts = clean_review.split(
-                        "❌ Problems Found"
-                    )
-
-                    if len(parts) > 1:
-
-                        clean_review = (
-                           "❌ Problems Found"
-                           + parts[1]
-                        )
-
-                st.markdown(
-                    clean_review 
-                ) 
+            st.metric(
+                "Quality Score",
+                f"{quality['score']}/100"
+            )
             
-        # -------------------------
-        # Fix Code
-        # -------------------------
+            st.progress(quality["score"] / 100)
 
-        with tab6:
+            st.caption(f"{quality['score']}% Quality Score")
 
-            st.subheader(
-                "🛠 Automatic Code Fix"
+            st.metric(
+                "Issues Found",
+                quality["total_issues"]
+            ) 
+            
+        with right:
+
+            if quality["score"] >= 90:
+
+                st.success("Excellent Code Quality")
+
+            elif quality["score"] >= 70:
+
+                st.warning("Good Code Quality")
+
+            else:
+
+                st.error("Needs Improvement")
+
+            st.markdown("---")
+
+        st.code(
+            quality["flake8"],
+            language="text"
+        )
+        
+    with tabs[4]:
+        
+        st.markdown("## 🤖 AI Code Review")
+
+        try:
+
+            with st.spinner("Reviewing code with AI..."):
+
+            
+                if st.session_state.review is None:
+                    st.session_state.review =  review_code(code)
+
+                review = st.session_state.review
+
+                st.markdown(review)
+                
+            st.download_button(
+                "📥 Download AI Review",
+                review,
+                file_name="ai_review.txt"
             )
 
-            if st.button(
-                "Generate Fixed Code",
-                key="fix_button"
-            ):
+        except Exception :
 
-                with st.spinner(
-                    "AI fixing code..."
+            st.error("❌ Unable to generate AI review.")
+
+            st.info(
+                "Please check your internet connection or API key."
+            )
+            
+            
+    with tabs[5]:
+
+        try:
+
+            fixed_code = st.session_state.fixed_code
+
+            if error is None:
+
+                st.success("✅ No syntax errors detected.")
+
+                if st.button(
+                    "Improve Code with AI",
+                    key="improve_code"
                 ):
 
-                    try:
+                    with st.spinner("🤖 Improving code..."):
 
-                        st.session_state.fixed_code = fix_code(
-                            code
-                        )
+                        fixed_code = fix_code(code)
 
-                    except Exception as e:
+                        st.session_state.fixed_code = fixed_code
 
-                        st.error(
-                            f"Fix Error: {e}"
-                        )
+            else:
 
-            if st.session_state.fixed_code:
+                st.error("❌ Syntax errors detected.")
 
+                if st.button(
+                    "🤖 Fix Code with AI",
+                    key="syntax_fix"
+                ):
 
-                st.success(
-                    "Fixed Code Generated"
-                )
+                    with st.spinner("🤖 Fixing syntax errors..."):
+
+                        fixed_code = fix_code(code)
+
+                        st.session_state.fixed_code = fixed_code
+
+            # Get latest fixed code from session state
+            fixed_code = st.session_state.fixed_code
+
+            if fixed_code:
+
+                st.success("✅ Code fixed successfully.")
 
                 st.code(
-                    st.session_state.fixed_code,
+                    fixed_code,
                     language="python"
                 )
 
                 st.download_button(
-
-                    label="⬇ Download Fixed Code",
-
-                    data=st.session_state.fixed_code,
-
-                    file_name="fixed_code.py",
-
-                    mime="text/python"
-
+                    "⬇ Download Fixed Code",
+                    fixed_code,
+                    file_name="fixed_code.py"
                 )
-            # -------------------------
-                # Report Generation
-            # -------------------------
 
-        with tab7:
+        except Exception as e:
 
-            st.subheader(
-               "📄 Generate Report"
-            )
-            
-            if st.button(
-                "Create Review Report",
-                key="report_button"
-            ):
+            st.error("❌ Unable to fix the code.")
 
-                try:
+            st.exception(e)                   
+    
+    with tabs[6]:
 
-                    report = generate_report(
+        st.markdown("## 📄 Analysis Report")
 
-                        functions,
-                        classes,
-                        loops,
-                        imports,
-                        variables,
-                        lines,
-                        complexity,
-                        issues,
-                        security_issues,
-                        st.session_state.ai_review
+        report = f"""
+        
+====================================================
+              AI CODE REVIEW REPORT
+====================================================
 
-                    )
+📊 CODE STATISTICS
+----------------------------------------------------
 
-                    st.session_state.report = report
+Functions            : {len(functions)}
+Classes              : {len(classes)}
+Loops                : {len(loops)}
+Imports              : {len(imports)}
+Variables            : {len(variables)}
 
-                    st.success(
-                       "Report generated successfully"
-                    )
+⚡ COMPLEXITY ANALYSIS
+---------------------------------------------------- 
 
-                except Exception as e:
+Estimated Complexity : {
+    complexity["Estimated Time Complexity"]
+    if "error" not in complexity
+    else "Not Available"
+}
 
-                    st.error(
-                        f"Report Error: {e}"
-                    )
+🛡 SECURITY ANALYSIS
+----------------------------------------------------
 
-            if st.session_state.report:
+Status               : {"PASS" if not security_issues else "WARNING"}
+Issues Found         : {len(security_issues)}
 
-                st.download_button(
+📈 QUALITY ANALYSIS
+----------------------------------------------------
 
-                    label="⬇ Download Report",
+Quality Score        : {quality["score"]}/100
+Quality Issues       : {quality["total_issues"]}
 
-                    data=st.session_state.report,
+====================================================
+Generated by AI Code Reviewer
+====================================================
+"""       
+        st.code(
+            report,
+            language="text"
+        )
 
-                    file_name="AI_Code_Review_Report.txt",
+        st.download_button(
+            "⬇ Download Report",
+            report,
+           file_name="analysis_report.txt"
+        )
+                
+# =====================================
+# MAIN
+# =====================================
 
-                    mime="text/plain"
+def main():
 
-                )
+    configure_page()
+
+    load_css()
+
+    # render_sidebar()
+
+    render_hero()
+
+    uploaded_file, code = render_input_section()
+
+    render_analysis(uploaded_file, code)
+
+if __name__ == "__main__":
+    main()
+    
