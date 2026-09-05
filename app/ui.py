@@ -4,7 +4,6 @@ from quality_checker import check_quality
 from security_checker import check_security
 import tempfile
 import os
-
 from ai_explainer import review_code, fix_code
 import streamlit as st
 from pathlib import Path
@@ -615,21 +614,16 @@ def render_analysis(uploaded_file, code):
             # Get latest fixed code from session state
             fixed_code = st.session_state.fixed_code
 
-            if fixed_code:
-
+            if fixed_code and not fixed_code.startswith("⚠"):
                 st.success("✅ Code fixed successfully.")
-
-                st.code(
-                    fixed_code,
-                    language="python"
-                )
+                st.code(fixed_code, language="python")
 
                 st.download_button(
                     "⬇ Download Fixed Code",
                     fixed_code,
                     file_name="fixed_code.py"
                 )
-
+           
         except Exception as e:
 
             st.error("❌ Unable to fix the code.")

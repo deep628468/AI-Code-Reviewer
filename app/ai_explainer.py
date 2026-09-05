@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from groq import Groq
 from groq import APIConnectionError, APIStatusError, RateLimitError
 
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME =  "openai/gpt-oss-120b" 
 
 # =====================================
 # Load Environment Variables
@@ -120,7 +120,9 @@ You are an expert Python code reviewer.
 
 Review the following Python code.
 
-Mention:
+Python Code:
+
+Provide a concise professional review covering:
 
 1. Bugs
 2. Code quality
@@ -128,14 +130,24 @@ Mention:
 4. Best practices
 5. Suggestions
 
-Python Code:
+
+
+Rules:
+- Keep the entire review under 120 words.
+- Use short, professional bullet points.
+- Do not repeat or rewrite the submitted code.
+- Focus on actual bugs, risks, and meaningful improvements.
+- Do not suggest unnecessary changes for simple code.
+- Do not recommend logging, error handling, type hints, or documentation unless they are genuinely relevant.
+- Do not explain basic Python concepts.
+- If the code is already correct, clearly state that and mention only 1–2 useful improvements.
 
 {code}
 """
     try:
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=MODEL_NAME,
             messages=[
                 {
                     "role": "system",
@@ -159,11 +171,13 @@ Python Code:
        
         return f"⚠ Connection failed.\n\n{e}"
 
-    except APIStatusError as e:
-        return f"⚠ API Error {e.status_code}"
+    # except APIStatusError as e:
+    #     return f"⚠ API Error {e.status_code}"
 
+    except APIStatusError as e:
+        return f"⚠ API Error {e.status_code}\n\nDetails: {e}"
+    
     except Exception as e:
-       
         return f"⚠ Unexpected Error:\n{e}"
 
 
@@ -205,7 +219,7 @@ Python Code:
     try:
         
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=MODEL_NAME,
             messages=[
                 {
                     "role": "system",
@@ -242,16 +256,15 @@ Python Code:
 
     except RateLimitError:
         return "⚠ Groq API rate limit exceeded."
-
+    
     except APIConnectionError as e:
-      
-        return {
-            "explanation": f"⚠ {e}",
-            "suggestion": str(e)
-        }
+        return f"⚠ Connection failed.\n\n{e}"
 
+    # except APIStatusError as e:
+    #     return f"⚠ API Error {e.status_code}"
+    
     except APIStatusError as e:
-        return f"⚠ API Error {e.status_code}"
+        return f"⚠ API Error {e.status_code}\n\nDetails: {e}"
 
     except Exception as e:
       
